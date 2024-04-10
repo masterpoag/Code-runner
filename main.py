@@ -33,33 +33,46 @@ def configReader():
         f.close()
         configReader()
     else:
-        for i in FOLDER_LOC:
-            filesearch(i)
+        for directory in FOLDER_LOC:
+            fileSearch(directory)
             return True
 
-def filesearch(f):
+def fileSearch(directory):
     global FILE_LIST
-    FOLDER_CONTENT = os.listdir(f)
-    for i in FOLDER_CONTENT:
-        if "." in i:
-            FILE_LIST.append(f+i)
+    FOLDER_CONTENT = os.listdir(directory)
+    for file in FOLDER_CONTENT:
+        if "." in file:
+            FILE_LIST.append(directory+file)
         else:
-            filesearch(f+i+"/")
+            fileSearch(directory+file+"/")
+
+def fileCompiler(File):
+    directory = File.rsplit("/",1)[0]+"/"
+    fileName = File.split("/")[-1]
+      
+
+
+
+
+
 
 def filePicker():
     global FILE_LIST
-    
+    os.system('cls||clear')
     print("Pick the file you want to run. CTRL+C to quit")
-    for i in FILE_LIST:
-        print(f"{FILE_LIST.index(i)}) {i.split("/")[-1]}")
+    for file in FILE_LIST:
+        print(f"{FILE_LIST.index(file)}) {file.split("/")[-1]}")
     user = input("")
     try:
         user = int(user,10)
     except:
         print("Make sure to pick a number. Press enter to return.")
+        input("")
         filePicker()
     else:
-        if(user > len(FILE_LIST)-1):
+        if(user <= len(FILE_LIST)):
+            fileCompiler(FILE_LIST[user])
+        else:    
             print("Make sure to pick a number listed. Press enter to return.")
             input("")
             filePicker()
