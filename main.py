@@ -1,4 +1,4 @@
-import os 
+import os,subprocess
 CONFIG_LAYOUT = f"""# Location of directories with code in them for more then 1 file sperate with commas.
 Code/
 # for code that requires being compiled they will be located here 
@@ -49,10 +49,24 @@ def fileSearch(directory):
 def fileCompiler(File):
     directory = File.rsplit("/",1)[0]+"/"
     fileName = File.split("/")[-1]
+    
+    match fileName.split(".")[-1]:
+        
+        case _:
+            print("Unknown file format can't handle add it into config.cfg manually if you want run it")
       
 
-
-
+def CMDRun(command,directory):
+    # Run the command
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, cwd=directory)
+    # Capture the output
+    stdout, stderr = process.communicate()
+    # Check if there were any errors
+    if stderr:
+        print("Error:", stderr)
+    else:
+        # Print the output
+        print("Output:", stdout)
 
 
 
@@ -77,9 +91,5 @@ def filePicker():
             input("")
             filePicker()
 
-def testing():
-    pass
-
-#testing()
 if configReader():
     filePicker()
