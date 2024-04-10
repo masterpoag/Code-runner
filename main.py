@@ -20,15 +20,21 @@ go build -o {{FILENAME}} {{FILE}}
 rs
 rustc -o {{FILENAME}} {{FILE}}
 # compiler arguments end
+# list file extentions that shouldbe ignored. Ignoring directories is not supported.
+# ignored files start
+.gitignore
+.toml
+# ignored files end
 """
 compilerStart,compilerEnd = "# compiler arguments start\n","# compiler arguments end\n"
+ignoreStart,ignoreEnd = "# ignored files start\n","# ignored files end\n"
 FOLDER_LOC= 0
 FILE_LIST = []
-
+config = open("config.cfg").readlines()
 def configReader():
-    global FOLDER_LOC,CONFIG_LAYOUT
+    global FOLDER_LOC,CONFIG_LAYOUT,config
     try:
-        FOLDER_LOC = open("config.cfg").readlines()[1].strip().split(",")
+        FOLDER_LOC = config[1].strip().split(",")
     except:
         f = open("config.cfg", "w")
         f.write(CONFIG_LAYOUT)
@@ -40,18 +46,26 @@ def configReader():
             return True
 
 def fileSearch(directory):
-    global FILE_LIST
+    global FILE_LIST,config
     FOLDER_CONTENT = os.listdir(directory)
+    start = config.index(ignoreStart) + 1
+    end = config.index(ignoreEnd)
+    ignoreList = [x.strip() for x in config[start:end]]
     for file in FOLDER_CONTENT:
         if "." in file:
-            FILE_LIST.append(directory+file)
+            found = False
+            for ignore in ignoreList:
+                if ignore in "."+file.split(".")[-1]:
+                    found = True
+            if not found:
+                FILE_LIST.append(directory+file)           
         else:
             fileSearch(directory+file+"/")
 
 def fileCompiler(File):
+    global config
     directory = File.rsplit("/",1)[0]+"/"
     fileName = File.split("/")[-1]
-    config = open("config.cfg").readlines()
     start = config.index(compilerStart) + 1
     end = config.index(compilerEnd)
     configList = [x.strip() for x in config[start:end]]
@@ -84,7 +98,7 @@ def CMDRun(command,directory):
 
 def filePicker():
     global FILE_LIST
-    os.system('cls||clear')
+    #os.system('cls||clear')
     print("Pick the file you want to run. CTRL+C to quit")
     for file in FILE_LIST:
         print(f"{FILE_LIST.index(file)}) {file.split("/")[-1]}")
@@ -103,7 +117,7 @@ def filePicker():
             input("")
             filePicker()
 
-fileCompiler("Code/project/src/test.rs")
 
-# if configReader():
-#     filePicker()
+if configReader():
+    filePicker()
+    pass
