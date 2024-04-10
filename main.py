@@ -4,6 +4,7 @@ Code/
 # for code that requires being compiled they will be located here 
 Compiled/
 # Compile commands change or add to what you use
+# compiler arguments start
 c
 gcc -o {{FILENAME}} {{FILE}}
 c++
@@ -16,10 +17,11 @@ c#
 csc {{FILE}}
 go
 go build -o {{FILENAME}} {{FILE}}
-rust
+rs
 rustc -o {{FILENAME}} {{FILE}}
+# compiler arguments end
 """
-
+compilerStart,compilerEnd = "# compiler arguments start\n","# compiler arguments end\n"
 FOLDER_LOC= 0
 FILE_LIST = []
 
@@ -49,11 +51,21 @@ def fileSearch(directory):
 def fileCompiler(File):
     directory = File.rsplit("/",1)[0]+"/"
     fileName = File.split("/")[-1]
-    
-    match fileName.split(".")[-1]:
-        
-        case _:
-            print("Unknown file format can't handle add it into config.cfg manually if you want run it")
+    config = open("config.cfg").readlines()
+    start = config.index(compilerStart) + 1
+    end = config.index(compilerEnd)
+    configList = [x.strip() for x in config[start:end]]
+    codingLangs = configList[::2]
+    arguments = configList[1::2]
+    found = False
+    for fileExtension in codingLangs:
+        if fileExtension == fileName.split(".")[-1].lower():
+            found = True
+            print(f"Found file extension in config it is a .{fileExtension} and its arguments are {arguments[codingLangs.index(fileExtension)]}")
+            print(arguments[codingLangs.index(fileExtension)].replace(f"{{FILENAME}}",fileName.split(".")[0]+str(codingLangs.index(fileExtension))).replace(f"{{FILE}}",File))
+            break
+    if not found:
+        print("Unknown file extension can't handle add it into config.cfg manually if you want run it")
       
 
 def CMDRun(command,directory):
@@ -91,5 +103,7 @@ def filePicker():
             input("")
             filePicker()
 
-if configReader():
-    filePicker()
+fileCompiler("Code/project/src/test.rs")
+
+# if configReader():
+#     filePicker()
