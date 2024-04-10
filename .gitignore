@@ -156,3 +156,4 @@ cython_debug/
 config.cfg
 Code/
 Compiled/
+test/
