@@ -81,9 +81,9 @@ def fileCompiler(File):
                         os.rename(directory+file, compiledFolder+file)
                         shellCMD = f"java {file.split('.')[0]}"
                         CMDRun(shellCMD,compiledFolder)
-            if fileType in "c" or fileType in "cpp":
-                shellCMD = f"./{file}"
-                CMDRun(shellCMD,compiledFolder)
+                    if fileType in "c" or fileType in "cpp":
+                        shellCMD = f"./{file}"
+                        CMDRun(shellCMD,compiledFolder)
     if not found:
         print("Unknown file extension can't handle add it into config.cfg manually if you want run it")
       
