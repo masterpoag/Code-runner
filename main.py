@@ -107,7 +107,7 @@ def filePicker():
     os.system('cls||clear')
     print("Pick the file you want to run. CTRL+C to quit")
     for file in FILE_LIST:
-        print(f"{FILE_LIST.index(file)}) {file.split("/")[-1]}")
+        print(f"{FILE_LIST.index(file)}) {file.split('/')[-1]}")
     user = input("")
     try:
         user = int(user,10)
