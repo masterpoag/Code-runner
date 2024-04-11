@@ -8,7 +8,7 @@ Compiled/
 # compiler arguments start
 c
 gcc -o {{COMPILED_FOLDER+FILENAME}} {{FILE}}
-c++
+cpp
 g++ -o {{COMPILED_FOLDER+FILENAME}} {{FILE}}
 java
 javac {{FILE}}
@@ -45,7 +45,11 @@ def configReader(): # reads the config and sets config
 
 def fileSearch(directory,config,codingLangs):                            # Searches files and appends them in a list
     global FILE_LIST
-    FOLDER_CONTENT = os.listdir(directory)                               # stores all files in directory
+    try:
+        FOLDER_CONTENT = os.listdir(directory)                               # stores all files in directory
+    except:
+        os.mkdir(directory)
+        fileSearch(directory,config,codingLangs)
     for file in FOLDER_CONTENT:
         if "." in file:                                                  # if is really a file do
             found = False
@@ -75,7 +79,7 @@ def fileCompiler(File):
                 for file in os.listdir(directory):
                     if ".class" in file:
                         os.rename(directory+file, compiledFolder+file)
-                        shellCMD = f"java {file.split(".")[0]}"
+                        shellCMD = f"java {file.split('.')[0]}"
                         CMDRun(shellCMD,compiledFolder)
             if fileType in "c" or fileType in "cpp":
                 shellCMD = f"./{file}"
