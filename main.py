@@ -75,6 +75,10 @@ def fileCompiler(File):
             #                                                            sets the command for the CMD using the args provided in config 
             shellCMD = arguments[index].replace(f"{{FILE_W/O_TYPE}}",fileName.split(".")[0]).replace(f"{{COMPILED_FOLDER+FILENAME}}",compiledFolder+fileName.split(".")[0]+str(index)).replace(f"{{FILE}}",File.split("/")[-1])
             CMDRun(shellCMD,directory)
+            try:
+                os.listdir(compiledFolder)
+            except:
+                os.mkdir(compiledFolder)
             if fileType in "java":                                      # java compiled now needs to be ran 
                 for file in os.listdir(directory):
                     if ".class" in file:
