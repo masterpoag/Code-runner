@@ -6,71 +6,75 @@ Compiled/
 # Compile commands change or add to what you use only files filled in this format will show up.
 # compiler arguments start
 c
-gcc -o {{FILENAME}} {{FILE}}
+gcc -o {{COMPILED_FOLDER+FILENAME}} {{FILE}}
 c++
-g++ -o {{FILENAME}} {{FILE}}
+g++ -o {{COMPILED_FOLDER+FILENAME}} {{FILE}}
 java
 javac {{FILE}}
-python
-python -m py_compile {{FILE}}
+py
+python -m {{FILE_W/O_TYPE}}
 c#
 csc {{FILE}}
 go
-go build -o {{FILENAME}} {{FILE}}
+go build -o {{COMPILED_FOLDER+FILENAME}} {{FILE}}
 rs
-rustc -o {{FILENAME}} {{FILE}}
+cargo run {{FILE}}
 # compiler arguments end
 """
 compilerStart,compilerEnd = "# compiler arguments start\n","# compiler arguments end\n"
 ignoreStart,ignoreEnd = "# ignored files start\n","# ignored files end\n"
-FOLDER_LOC= 0
-config = open("config.cfg").readlines()
-FILE_LIST = []
-
-start = config.index(compilerStart) + 1
-end = config.index(compilerEnd)
-configList = [x.strip() for x in config[start:end]]
-codingLangs = configList[::2]
-arguments = configList[1::2]
+FOLDER_LOC,compiledFolder,FILE_LIST  = 0,0,[]
 
 def configReader():
-    global FOLDER_LOC,CONFIG_LAYOUT,config
+    global FOLDER_LOC,CONFIG_LAYOUT,compiledFolder
     try:
-        FOLDER_LOC = config[1].strip().split(",")
+        FOLDER_LOC= open("config.cfg").readlines()[1].strip().split(",")
+        compiledFolder = open("config.cfg").readlines()[3].strip()
+        print(compiledFolder)
     except:
         f = open("config.cfg", "w")
         f.write(CONFIG_LAYOUT)
         f.close()
         configReader()
-    else:
-        for directory in FOLDER_LOC:
-            fileSearch(directory)
-            return True
+            
 
-def fileSearch(directory):
-    global FILE_LIST,config,codingLangs
+
+
+def fileSearch(directory,config,codingLangs):
+    global FILE_LIST
     FOLDER_CONTENT = os.listdir(directory)
     for file in FOLDER_CONTENT:
         if "." in file:
             found = False
             for lang in codingLangs:
-                if file.split(".")[-1] in lang :
+                if file.split(".")[-1] in lang and file.split(".")[-1] != "o":
                     found = True
             if found:
                 FILE_LIST.append(directory+file)           
         else:
-            fileSearch(directory+file+"/")
+            fileSearch(directory+file+"/",config,codingLangs)
 
 def fileCompiler(File):
-    global config,arguments,codingLangs
+    global config,arguments,codingLangs,compiledFolder
     directory = File.rsplit("/",1)[0]+"/"
     fileName = File.split("/")[-1]
+    fileType = File.split(".")[-1]
     found = False
     for fileExtension in codingLangs:
         if fileExtension == fileName.split(".")[-1].lower():
             found = True
-            print(f"Found file extension in config it is a .{fileExtension} and its arguments are {arguments[codingLangs.index(fileExtension)]}")
-            print(arguments[codingLangs.index(fileExtension)].replace(f"{{FILENAME}}",fileName.split(".")[0]+str(codingLangs.index(fileExtension))).replace(f"{{FILE}}",File))
+            index = codingLangs.index(fileExtension)
+            print(f"Found file extension in config it is a .{fileExtension} and its arguments are {arguments[index]}")
+            shellCMD = arguments[index].replace(f"{{FILE_W/O_TYPE}}",fileName.split(".")[0]).replace(f"{{COMPILED_FOLDER+FILENAME}}",compiledFolder+fileName.split(".")[0]+str(index)).replace(f"{{FILE}}",File.split("/")[-1])
+            CMDRun(shellCMD,directory)
+            if fileType in "java":
+                for file in os.listdir(directory):
+                    if ".class" in file:
+                        os.rename(directory+file, compiledFolder+file)
+                        shellCMD = f"java {file.split(".")[0]}"
+                        print(shellCMD)
+                        CMDRun(shellCMD,compiledFolder)
+
             break
     if not found:
         print("Unknown file extension can't handle add it into config.cfg manually if you want run it")
@@ -110,8 +114,14 @@ def filePicker():
             print("Make sure to pick a number listed. Press enter to return.")
             input("")
             filePicker()
-
-
-if configReader():
+if __name__ == "__main__":
+    configReader()
+    config = open("config.cfg").readlines()
+    start = config.index(compilerStart) + 1
+    end = config.index(compilerEnd)
+    configList = [x.strip() for x in config[start:end]]
+    codingLangs = configList[::2]
+    arguments = configList[1::2]
+    for i in FOLDER_LOC:
+        fileSearch(i,config,codingLangs)
     filePicker()
-    pass
