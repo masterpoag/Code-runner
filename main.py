@@ -1,4 +1,5 @@
 import os,subprocess
+# Config file
 CONFIG_LAYOUT = f"""# Location of directories with code in them for more then 1 file sperate with commas.
 Code/
 # for code that requires being compiled they will be located here 
@@ -21,38 +22,40 @@ rs
 cargo run {{FILE}}
 # compiler arguments end
 """
+# Set up for slicing 
 compilerStart,compilerEnd = "# compiler arguments start\n","# compiler arguments end\n"
 ignoreStart,ignoreEnd = "# ignored files start\n","# ignored files end\n"
+
+# global vars
 FOLDER_LOC,compiledFolder,FILE_LIST  = 0,0,[]
 
-def configReader():
-    global FOLDER_LOC,CONFIG_LAYOUT,compiledFolder
-    try:
-        FOLDER_LOC= open("config.cfg").readlines()[1].strip().split(",")
-        compiledFolder = open("config.cfg").readlines()[3].strip()
-        print(compiledFolder)
-    except:
-        f = open("config.cfg", "w")
-        f.write(CONFIG_LAYOUT)
+def configReader(): # reads the config and sets config
+    global FOLDER_LOC,CONFIG_LAYOUT,compiledFolder 
+    try:                                                                
+        FOLDER_LOC= open("config.cfg").readlines()[1].strip().split(",") # checks config and saves the directories listed
+        compiledFolder = open("config.cfg").readlines()[3].strip()       # sets the directory for compiled needed code
+    except:                                                                 
+        f = open("config.cfg", "w")                                      # if no config found create one.               
+        f.write(CONFIG_LAYOUT)                                           # writes to the config
         f.close()
-        configReader()
+        configReader()                                                   # iterates
             
 
 
 
-def fileSearch(directory,config,codingLangs):
+def fileSearch(directory,config,codingLangs):                            # Searches files and appends them in a list
     global FILE_LIST
-    FOLDER_CONTENT = os.listdir(directory)
+    FOLDER_CONTENT = os.listdir(directory)                               # stores all files in directory
     for file in FOLDER_CONTENT:
-        if "." in file:
+        if "." in file:                                                  # if is really a file do
             found = False
             for lang in codingLangs:
-                if file.split(".")[-1] in lang and file.split(".")[-1] != "o":
+                if file.split(".")[-1] in lang and file.split(".")[-1] != "o":  # checks if file is in the config args
                     found = True
             if found:
-                FILE_LIST.append(directory+file)           
+                FILE_LIST.append(directory+file)
         else:
-            fileSearch(directory+file+"/",config,codingLangs)
+            fileSearch(directory+file+"/",config,codingLangs)           # iterates
 
 def fileCompiler(File):
     global config,arguments,codingLangs,compiledFolder
@@ -64,23 +67,24 @@ def fileCompiler(File):
         if fileExtension == fileName.split(".")[-1].lower():
             found = True
             index = codingLangs.index(fileExtension)
-            print(f"Found file extension in config it is a .{fileExtension} and its arguments are {arguments[index]}")
+            #print(f"Found file extension in config it is a .{fileExtension} and its arguments are {arguments[index]}") TESTING ONLY
+            #                                                            sets the command for the CMD using the args provided in config 
             shellCMD = arguments[index].replace(f"{{FILE_W/O_TYPE}}",fileName.split(".")[0]).replace(f"{{COMPILED_FOLDER+FILENAME}}",compiledFolder+fileName.split(".")[0]+str(index)).replace(f"{{FILE}}",File.split("/")[-1])
             CMDRun(shellCMD,directory)
-            if fileType in "java":
+            if fileType in "java":                                      # java compiled now needs to be ran 
                 for file in os.listdir(directory):
                     if ".class" in file:
                         os.rename(directory+file, compiledFolder+file)
                         shellCMD = f"java {file.split(".")[0]}"
-                        print(shellCMD)
                         CMDRun(shellCMD,compiledFolder)
-
-            break
+            if fileType in "c" or fileType in "cpp":
+                shellCMD = f"./{file}"
+                CMDRun(shellCMD,compiledFolder)
     if not found:
         print("Unknown file extension can't handle add it into config.cfg manually if you want run it")
       
 
-def CMDRun(command,directory):
+def CMDRun(command,directory):                                           # runs commands in CMD in the directory given
     # Run the command
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, cwd=directory)
     # Capture the output
@@ -96,7 +100,7 @@ def CMDRun(command,directory):
 
 def filePicker():
     global FILE_LIST
-    #os.system('cls||clear')
+    os.system('cls||clear')
     print("Pick the file you want to run. CTRL+C to quit")
     for file in FILE_LIST:
         print(f"{FILE_LIST.index(file)}) {file.split("/")[-1]}")
