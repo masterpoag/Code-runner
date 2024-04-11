@@ -3,7 +3,7 @@ CONFIG_LAYOUT = f"""# Location of directories with code in them for more then 1 
 Code/
 # for code that requires being compiled they will be located here 
 Compiled/
-# Compile commands change or add to what you use
+# Compile commands change or add to what you use only files filled in this format will show up.
 # compiler arguments start
 c
 gcc -o {{FILENAME}} {{FILE}}
@@ -20,17 +20,19 @@ go build -o {{FILENAME}} {{FILE}}
 rs
 rustc -o {{FILENAME}} {{FILE}}
 # compiler arguments end
-# list file extentions that shouldbe ignored. Ignoring directories is not supported.
-# ignored files start
-.gitignore
-.toml
-# ignored files end
 """
 compilerStart,compilerEnd = "# compiler arguments start\n","# compiler arguments end\n"
 ignoreStart,ignoreEnd = "# ignored files start\n","# ignored files end\n"
 FOLDER_LOC= 0
-FILE_LIST = []
 config = open("config.cfg").readlines()
+FILE_LIST = []
+
+start = config.index(compilerStart) + 1
+end = config.index(compilerEnd)
+configList = [x.strip() for x in config[start:end]]
+codingLangs = configList[::2]
+arguments = configList[1::2]
+
 def configReader():
     global FOLDER_LOC,CONFIG_LAYOUT,config
     try:
@@ -46,31 +48,23 @@ def configReader():
             return True
 
 def fileSearch(directory):
-    global FILE_LIST,config
+    global FILE_LIST,config,codingLangs
     FOLDER_CONTENT = os.listdir(directory)
-    start = config.index(ignoreStart) + 1
-    end = config.index(ignoreEnd)
-    ignoreList = [x.strip() for x in config[start:end]]
     for file in FOLDER_CONTENT:
         if "." in file:
             found = False
-            for ignore in ignoreList:
-                if ignore in "."+file.split(".")[-1]:
+            for lang in codingLangs:
+                if file.split(".")[-1] in lang :
                     found = True
-            if not found:
+            if found:
                 FILE_LIST.append(directory+file)           
         else:
             fileSearch(directory+file+"/")
 
 def fileCompiler(File):
-    global config
+    global config,arguments,codingLangs
     directory = File.rsplit("/",1)[0]+"/"
     fileName = File.split("/")[-1]
-    start = config.index(compilerStart) + 1
-    end = config.index(compilerEnd)
-    configList = [x.strip() for x in config[start:end]]
-    codingLangs = configList[::2]
-    arguments = configList[1::2]
     found = False
     for fileExtension in codingLangs:
         if fileExtension == fileName.split(".")[-1].lower():
